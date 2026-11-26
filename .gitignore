@@ -1,0 +1,14 @@
+# macOS
+build/
+*.dSYM/
+.DS_Store
+
+# Windows
+*.exe
+*.syso
+
+# 本地产物
+*.log
+
+# 分发包（走 Release，不进仓库）
+macOS/*.zip
