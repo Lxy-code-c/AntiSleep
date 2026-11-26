@@ -106,7 +106,7 @@ AntiSleep/
 │   ├── state.go         # 配置、进程枚举、防息屏执行状态
 │   ├── api.go           # Win32 API 声明
 │   └── go.mod
-└── .github/workflows/build.yml
+└── LICENSE
 ```
 
 Windows 构建：
