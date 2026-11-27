@@ -34,6 +34,18 @@ jobs:
           cd windows
           $ver = "${{ github.ref_name }}".TrimStart("v")
           go build -ldflags="-H windowsgui -s -w -X main.appVersion=$ver" -o AntiSleep.exe .
+      - name: Embed icon + sign
+        shell: pwsh
+        run: |
+          python -m pip install --quiet --disable-pip-version-check pefile pillow
+          python tools\win_icon.py windows\AntiSleep.exe macOS\AppIcon.png
+          $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" -ErrorAction SilentlyContinue |
+                      Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $signtool) { throw "signtool.exe not found" }
+          & $signtool.FullName sign /f windows\signing\AntiSleep.pfx /p antisleep /fd sha256 /v windows\AntiSleep.exe
+          $sig = Get-AuthenticodeSignature windows\AntiSleep.exe
+          Write-Host "signature status: $($sig.Status) / $($sig.SignerCertificate.Subject)"
+          if ($sig.Status -eq 'NotSigned') { throw "签名没写进去" }
       - uses: actions/upload-artifact@v4
         with:
           name: AntiSleep-Windows
