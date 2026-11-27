@@ -87,7 +87,7 @@ func confirmLidRestore() {
 	}
 	msg := utf16Ptr("合盖不休眠还开着，退出后仍会生效。\n是否恢复为系统默认（合盖睡眠）？")
 	title := utf16Ptr("AntiSleep")
-	r, _, _ := pMessageBoxW.Call(hwndMain, msg, title, uintptr(4|0x20)) // MB_YESNO | MB_ICONQUESTION
+	r, _, _ := pMessageBoxW.Call(hwndMain, msg, title, uintptr(4|0x20|0x40000)) // MB_YESNO | MB_ICONQUESTION | MB_TOPMOST
 	if r == 6 {                                                        // IDYES
 		if setLidNoSleep(false) {
 			st.lidMode = false

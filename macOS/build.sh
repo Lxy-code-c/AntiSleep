@@ -36,6 +36,18 @@ fi
 cp build/AntiSleep "$APP/Contents/MacOS/AntiSleep"
 chmod +x "$APP/Contents/MacOS/AntiSleep"
 
+if [[ -f AppIcon.png ]]; then
+  ICONSET=build/AppIcon.iconset
+  rm -rf "$ICONSET"; mkdir -p "$ICONSET"
+  for s in 16 32 128 256 512; do
+    d=$((s*2))
+    sips -z $s $s AppIcon.png --out "$ICONSET/icon_${s}x${s}.png" >/dev/null
+    sips -z $d $d AppIcon.png --out "$ICONSET/icon_${s}x${s}@2x.png" >/dev/null
+  done
+  iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
+  echo "→ 图标已生成"
+fi
+
 echo "→ ad-hoc 签名"
 codesign --force --deep --sign - "$APP"
 

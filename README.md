@@ -35,6 +35,11 @@
 
 勾上后，合上盖子、塞进包里，后台任务继续跑。**代价是机器不会自动降温**——务必放在通风处、接着电源，否则容易发烫。只想锁屏（不关盖）时，用上面的"后台守护"就够，不必开这个。
 
+> ⚠️ 这是一条**会留在系统里**的设置：它不跟着 AntiSleep 退出而失效。直接点"退出"会先弹框问你要不要恢复成默认（合盖睡眠），选"保持设置并退出"的话，系统就一直保持合盖不睡。手动恢复命令：
+>
+> - macOS：`sudo pmset -a disablesleep 0`
+> - Windows（管理员）：`powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 1 && powercfg /setdcvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 1 && powercfg /setactive SCHEME_CURRENT`
+
 ---
 
 ## ⬇️ 下载

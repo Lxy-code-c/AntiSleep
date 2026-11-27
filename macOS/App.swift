@@ -69,6 +69,7 @@ final class AntiSleepModel: ObservableObject {
         lidMode = LidSleep.isDisabled
         refreshCandidates()
         refreshActive()
+        LaunchAgent.refreshIfEnabled()
         DispatchQueue.main.async { [weak self] in
             self?.startTicker()
         }
@@ -421,17 +422,27 @@ enum LaunchAgent {
             }
             do {
                 try data.write(to: plistURL)
-                run(["launchctl", "unload", plistURL.path])
-                run(["launchctl", "load", plistURL.path])
+                // 不用 unload/load：unload 会终止由该 login item 启动的本进程，
+                // 表现就是用户一取消勾选，App 自己消失了。
+                let uid = String(getuid())
+                run(["launchctl", "enable", "gui/\(uid)/\(label)"])
+                run(["launchctl", "bootstrap", "gui/\(uid)", plistURL.path])
                 return true
             } catch {
                 return false
             }
         } else {
-            run(["launchctl", "unload", plistURL.path])
+            let uid = String(getuid())
+            run(["launchctl", "disable", "gui/\(uid)/\(label)"])
             try? FileManager.default.removeItem(at: plistURL)
             return true
         }
+    }
+
+    /// App 被拖到别的目录后，plist 里的旧路径会让登录不启动；启动时顺手重写。
+    static func refreshIfEnabled() {
+        guard isEnabled() else { return }
+        _ = setEnabled(true)
     }
 
     private static func run(_ args: [String]) {
