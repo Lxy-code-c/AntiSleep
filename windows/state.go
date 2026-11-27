@@ -29,6 +29,7 @@ type runtimeState struct {
 	whitelist       []string // 用户添加的进程名（原样保存，通常小写 exe 名）
 	activeWhitelist []string // 此刻正在运行的白名单进程（展示用原始大小写）
 	autostart       bool
+	lidMode         bool
 	minutes         int // 输入框里的时长（分钟）
 	toast           string
 	toastUntil      int64
@@ -68,6 +69,8 @@ func loadConfig() {
 				if n, e := strconv.Atoi(v); e == nil && n >= 1 && n <= 1440 {
 					st.minutes = n
 				}
+			case "lid":
+				st.lidMode = v == "1"
 			case "whitelist":
 				st.whitelist = nil
 				for _, item := range strings.Split(v, "|") {
@@ -81,6 +84,9 @@ func loadConfig() {
 	}
 	st.totalSec = st.minutes * 60
 	st.autostart = queryAutostart()
+	if action, ok := queryLidAction(); ok {
+		st.lidMode = action == 0
+	}
 }
 
 func saveConfig() {
@@ -91,6 +97,11 @@ func saveConfig() {
 	lines = append(lines, "# AntiSleep 配置")
 	lines = append(lines, "minutes="+strconv.Itoa(st.minutes))
 	lines = append(lines, "whitelist="+strings.Join(st.whitelist, "|"))
+	if st.lidMode {
+		lines = append(lines, "lid=1")
+	} else {
+		lines = append(lines, "lid=0")
+	}
 	_ = os.WriteFile(configPath(), []byte(strings.Join(lines, "\n")+"\n"), 0o644)
 }
 

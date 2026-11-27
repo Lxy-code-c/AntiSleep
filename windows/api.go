@@ -97,6 +97,7 @@ var (
 
 	// shell32（托盘气泡/图标）
 	pShellNotifyIconW = shell32.NewProc("Shell_NotifyIconW")
+	pShellExecuteW    = shell32.NewProc("ShellExecuteW")
 )
 
 const (

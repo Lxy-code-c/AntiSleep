@@ -49,6 +49,8 @@ final class AntiSleepModel: ObservableObject {
 
     // 开机自启
     @Published var autostart: Bool = false
+    // 合盖不睡眠（pmset disablesleep，需要管理员授权）
+    @Published var lidMode: Bool = false
 
     private var mainProc: Process?
     private var totalSeconds = 0
@@ -64,6 +66,7 @@ final class AntiSleepModel: ObservableObject {
     init() {
         load()
         autostart = LaunchAgent.isEnabled()
+        lidMode = LidSleep.isDisabled
         refreshCandidates()
         refreshActive()
         DispatchQueue.main.async { [weak self] in
@@ -439,6 +442,38 @@ enum LaunchAgent {
     }
 }
 
+// MARK: - 合盖不睡眠（pmset disablesleep）
+
+enum LidSleep {
+    static var isDisabled: Bool {
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/pmset")
+        p.arguments = ["-g"]
+        let pipe = Pipe()
+        p.standardOutput = pipe
+        do { try p.run() } catch { return false }
+        p.waitUntilExit()
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        guard let text = String(data: data, encoding: .utf8) else { return false }
+        for line in text.split(separator: "\n") {
+            let t = line.trimmingCharacters(in: .whitespaces)
+            if t.hasPrefix("disablesleep") {
+                return t.split(separator: " ").last.map { $0 == "1" } ?? false
+            }
+        }
+        return false
+    }
+
+    /// 需要管理员密码（系统弹窗），关闭时恢复系统默认 0
+    static func set(disabled: Bool) -> Bool {
+        let script = "do shell script \"/usr/bin/pmset -a disablesleep \(disabled ? 1 : 0)\" with administrator privileges"
+        guard let apple = NSAppleScript(source: script) else { return false }
+        var err: NSDictionary?
+        apple.executeAndReturnError(&err)
+        return err == nil
+    }
+}
+
 // MARK: - 界面
 
 struct AntiSleepView: View {
@@ -644,12 +679,27 @@ struct AntiSleepView: View {
             }
             .toggleStyle(.checkbox)
 
+            Toggle(isOn: Binding(
+                get: { model.lidMode },
+                set: { newValue in
+                    if LidSleep.set(disabled: newValue) {
+                        model.lidMode = newValue
+                        model.show(newValue ? "已开启合盖不休眠（注意散热）" : "已恢复合盖睡眠")
+                    } else {
+                        model.show("已取消管理员授权，未修改设置")
+                    }
+                }
+            )) {
+                Text("合盖也不休眠（需管理员授权）").font(.system(size: 11))
+            }
+            .toggleStyle(.checkbox)
+
             if !model.toast.isEmpty {
                 Text(model.toast)
                     .font(.system(size: 10))
                     .foregroundStyle(.blue)
             }
-            Text("关机/睡眠仍需手动；守护只阻止空闲睡眠")
+            Text(model.lidMode ? "合盖不休眠已开启：注意放在通风处、接电源" : "关机/睡眠仍需手动；守护只阻止空闲睡眠")
                 .font(.system(size: 9))
                 .foregroundStyle(.quaternary)
         }
