@@ -44,7 +44,7 @@
 
 ## ⬇️ 下载
 
-到 [Releases](../../releases) 页面下载：
+到 [Releases](../../releases/latest) 页面下载（只保留最新版本，旧版本已清理）：
 
 - `AntiSleep-macOS.zip` —— 解压得到 `AntiSleep.app`（macOS 13+，Apple 芯片 / Intel 通用）
 - `AntiSleep.exe` —— Windows 10/11 64 位，双击即用，无需安装
@@ -115,6 +115,7 @@
 AntiSleep/
 ├── macOS/
 │   ├── App.swift        # 全部逻辑与界面
+│   ├── AppIcon.png      # 图标源图（build.sh 会转成 .icns）
 │   ├── Info.plist
 │   └── build.sh         # 一条命令出通用二进制 .app + zip
 ├── windows/
