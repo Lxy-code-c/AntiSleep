@@ -16,10 +16,13 @@ echo "→ 编译 arm64"
 swiftc -O -swift-version 5 -target arm64-apple-macosx${MIN} -parse-as-library App.swift -o build/AntiSleep-arm64
 
 echo "→ 编译 x86_64"
-swiftc -O -swift-version 5 -target x86_64-apple-macosx${MIN} -parse-as-library App.swift -o build/AntiSleep-x86_64
-
-echo "→ 合并为通用二进制"
-lipo -create -output build/AntiSleep build/AntiSleep-arm64 build/AntiSleep-x86_64
+if swiftc -O -swift-version 5 -target x86_64-apple-macosx${MIN} -parse-as-library App.swift -o build/AntiSleep-x86_64; then
+  echo "→ 合并为通用二进制"
+  lipo -create -output build/AntiSleep build/AntiSleep-arm64 build/AntiSleep-x86_64
+else
+  echo "⚠ x86_64 编译失败，仅输出 arm64 版本"
+  cp build/AntiSleep-arm64 build/AntiSleep
+fi
 lipo -info build/AntiSleep
 
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
