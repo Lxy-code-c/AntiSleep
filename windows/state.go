@@ -14,6 +14,9 @@ import (
 	"unsafe"
 )
 
+// 版本号由构建时 -ldflags -X main.appVersion=... 注入，避免面板上写死的版本和 tag 对不上。
+var appVersion = "1.2.4"
+
 const (
 	ES_CONTINUOUS       = 0x80000000
 	ES_SYSTEM_REQUIRED  = 0x00000001
