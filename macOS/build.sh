@@ -27,6 +27,12 @@ lipo -info build/AntiSleep
 
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp Info.plist "$APP/Contents/Info.plist"
+VER="${VERSION:-}"
+if [[ -n "$VER" ]]; then
+  /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VER" "$APP/Contents/Info.plist"
+  /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VER" "$APP/Contents/Info.plist"
+  echo "→ 版本号写入 $VER"
+fi
 cp build/AntiSleep "$APP/Contents/MacOS/AntiSleep"
 chmod +x "$APP/Contents/MacOS/AntiSleep"
 

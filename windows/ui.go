@@ -351,7 +351,7 @@ func drawUI(hdc uintptr, width, height int) {
 	drawText(hdc, "合盖也不休眠（需管理员授权）", sc(46), ly, sc(250), boxSize, fontMicro, colorSub, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX)
 	hits = append(hits, hitBox{"lid", sc(24), ly - sc(4), sc(250), boxSize + sc(8)})
 
-	drawText(hdc, "v1.2.0", width-sc(94), ay, sc(70), boxSize, fontMicro, colorDim, DT_RIGHT|DT_VCENTER|DT_SINGLELINE)
+	drawText(hdc, "v1.2.2", width-sc(94), ay, sc(70), boxSize, fontMicro, colorDim, DT_RIGHT|DT_VCENTER|DT_SINGLELINE)
 
 	// Toast
 	if st.toast != "" && nowMillis() < st.toastUntil {

@@ -14,7 +14,9 @@ jobs:
         run: |
           cd macOS
           chmod +x build.sh
-          ./build.sh
+          VERSION="$(echo "${GITHUB_REF_NAME#v}" | grep -E '^[0-9]+\.[0-9]+' || echo)"
+          echo "version=$VERSION"
+          VERSION="$VERSION" ./build.sh
       - uses: actions/upload-artifact@v4
         with:
           name: AntiSleep-macOS
