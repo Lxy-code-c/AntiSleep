@@ -184,7 +184,9 @@ func wndProc(hwnd, msg, wparam, lparam uintptr) uintptr {
 	case WM_TIMER:
 		if wparam == 1 {
 			stepSecond()
-			repaint()
+			if vis, _, _ := pIsWindowVisible.Call(hwnd); vis != 0 {
+				repaint()
+			}
 		}
 		return 0
 

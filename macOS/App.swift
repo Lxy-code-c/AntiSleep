@@ -257,6 +257,7 @@ final class AntiSleepModel: ObservableObject {
     }
 
     func pickAppFromDisk() {
+        NSApp.activate(ignoringOtherApps: true)
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
@@ -479,6 +480,7 @@ enum LidSleep {
 struct AntiSleepView: View {
     @ObservedObject private var model = AntiSleepModel.shared
     @State private var minutesText: String = ""
+    @State private var showQuitConfirm = false
     @FocusState private var minutesFocused: Bool
 
     var body: some View {
@@ -505,10 +507,27 @@ struct AntiSleepView: View {
         HStack(alignment: .firstTextBaseline) {
             Text("AntiSleep").font(.system(size: 20, weight: .semibold))
             Spacer()
-            Button("退出") { NSApp.terminate(nil) }
-                .buttonStyle(.plain)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            Button("退出") {
+                if model.lidMode {
+                    showQuitConfirm = true
+                } else {
+                    NSApp.terminate(nil)
+                }
+            }
+            .buttonStyle(.plain)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .alert("合盖不休眠还开着", isPresented: $showQuitConfirm) {
+                Button("恢复合盖睡眠并退出", role: .destructive) {
+                    _ = LidSleep.set(disabled: false)
+                    model.lidMode = false
+                    NSApp.terminate(nil)
+                }
+                Button("保持设置并退出") { NSApp.terminate(nil) }
+                Button("取消", role: .cancel) {}
+            } message: {
+                Text("这个设置会一直保留到手动关闭。合盖放在包里时机器不会降温，容易过热。")
+            }
         }
     }
 
@@ -638,31 +657,34 @@ struct AntiSleepView: View {
                     .foregroundStyle(.tertiary)
                     .padding(.vertical, 4)
             } else {
-                VStack(spacing: 4) {
-                    ForEach(model.watchList) { app in
-                        HStack(spacing: 8) {
-                            Circle()
-                                .fill(model.activeIDs.contains(app.id) ? Color.green : Color.secondary.opacity(0.4))
-                                .frame(width: 6, height: 6)
-                            Text(app.name)
-                                .font(.system(size: 11))
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                            Spacer()
-                            Button {
-                                model.remove(app)
-                            } label: {
-                                Image(systemName: "xmark")
-                                    .font(.system(size: 9, weight: .semibold))
-                                    .foregroundStyle(.tertiary)
+                ScrollView {
+                    VStack(spacing: 4) {
+                        ForEach(model.watchList) { app in
+                            HStack(spacing: 8) {
+                                Circle()
+                                    .fill(model.activeIDs.contains(app.id) ? Color.green : Color.secondary.opacity(0.4))
+                                    .frame(width: 6, height: 6)
+                                Text(app.name)
+                                    .font(.system(size: 11))
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                                Spacer()
+                                Button {
+                                    model.remove(app)
+                                } label: {
+                                    Image(systemName: "xmark")
+                                        .font(.system(size: 9, weight: .semibold))
+                                        .foregroundStyle(.tertiary)
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
                         }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
                     }
                 }
+                .frame(maxHeight: 150)
             }
         }
     }

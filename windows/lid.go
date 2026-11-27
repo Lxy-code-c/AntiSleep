@@ -35,15 +35,27 @@ func queryLidAction() (int, bool) {
 		if !strings.Contains(line, "LIDACTION") {
 			continue
 		}
-		// 找到 LIDACTION 的 GUID 段落后，向下取第一个 AC 值
-		for j := i; j < i+16 && j < len(lines); j++ {
-			t := strings.ToLower(strings.TrimSpace(lines[j]))
-			if idx := strings.Index(t, "0x"); idx >= 0 {
-				hexPart := strings.TrimRight(t[idx:], " ")
-				if len(hexPart) >= 10 && hexPart[:9] == "0x0000000" {
-					return int(hexPart[9] - '0'), true
-				}
+		// 只要"当前"那一行，避免误读到"可能的设置"列表
+		last := -1
+		for j := i; j < i+24 && j < len(lines); j++ {
+			t := strings.TrimSpace(lines[j])
+			lower := strings.ToLower(t)
+			idx := strings.Index(lower, "0x")
+			if idx < 0 {
+				continue
 			}
+			hexPart := strings.TrimRight(lower[idx:], " ")
+			if len(hexPart) < 10 || hexPart[:9] != "0x0000000" {
+				continue
+			}
+			val := int(hexPart[9] - '0')
+			last = val
+			if strings.Contains(lower, "current") || strings.Contains(t, "当前") {
+				return val, true
+			}
+		}
+		if last >= 0 {
+			return last, true
 		}
 	}
 	return -1, false
@@ -66,6 +78,22 @@ func lidStatusText() string {
 		return "合盖即睡眠（系统默认）"
 	}
 	return "合盖不休眠 · 需通电，注意散热"
+}
+
+// 退出前确认：合盖不睡眠是持久化设置，不随程序退出失效
+func confirmLidRestore() {
+	if !st.lidMode {
+		return
+	}
+	msg := utf16Ptr("合盖不休眠还开着，退出后仍会生效。\n是否恢复为系统默认（合盖睡眠）？")
+	title := utf16Ptr("AntiSleep")
+	r, _, _ := pMessageBoxW.Call(hwndMain, msg, title, uintptr(4|0x20)) // MB_YESNO | MB_ICONQUESTION
+	if r == 6 {                                                        // IDYES
+		if setLidNoSleep(false) {
+			st.lidMode = false
+			saveConfig()
+		}
+	}
 }
 
 func toggleLid() {

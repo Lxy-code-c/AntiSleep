@@ -13,7 +13,7 @@ import (
 
 const (
 	winW = 380
-	winH = 584
+	winH = 622
 )
 
 var (
@@ -301,8 +301,8 @@ func drawUI(hdc uintptr, width, height int) {
 			active[strings.ToLower(a)] = true
 		}
 		shown := len(st.whitelist)
-		if shown > 4 {
-			shown = 4
+		if shown > 5 {
+			shown = 5
 		}
 		for i := 0; i < shown; i++ {
 			name := st.whitelist[i]
@@ -326,13 +326,13 @@ func drawUI(hdc uintptr, width, height int) {
 			drawText(hdc, "×", delX, rowY, sc(24), sc(30), fontMicro, colorDim, DT_CENTER|DT_VCENTER|DT_SINGLELINE)
 			hits = append(hits, hitBox{"del:" + name, delX, rowY, sc(24), sc(30)})
 		}
-		if len(st.whitelist) > 4 {
-			drawText(hdc, fmt.Sprintf("…另有 %d 个（点“添加”可管理）", len(st.whitelist)-4), sc(24), listY+4*sc(34), width-sc(48), sc(16), fontMicro, colorDim, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX)
+		if len(st.whitelist) > 5 {
+			drawText(hdc, fmt.Sprintf("…另有 %d 个，先删掉上面任一项即可露出", len(st.whitelist)-5), sc(24), listY+5*sc(34), width-sc(48), sc(14), fontMicro, colorDim, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX)
 		}
 	}
 
 	// 底部：开机自启 + 合盖 + 版本
-	ay := sc(494)
+	ay := sc(532)
 	boxSize := sc(16)
 	roundRect(hdc, sc(24), ay, boxSize, boxSize, sc(4), colorCard2)
 	if st.autostart {
@@ -342,7 +342,7 @@ func drawUI(hdc uintptr, width, height int) {
 	drawText(hdc, "开机自启（静默到托盘）", sc(46), ay, sc(200), boxSize, fontMicro, colorSub, DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX)
 	hits = append(hits, hitBox{"autostart", sc(24), ay - sc(4), sc(200), boxSize + sc(8)})
 	// 合盖不睡眠
-	ly := sc(524)
+	ly := sc(562)
 	roundRect(hdc, sc(24), ly, boxSize, boxSize, sc(4), colorCard2)
 	if st.lidMode {
 		roundRect(hdc, sc(24), ly, boxSize, boxSize, sc(4), colorBlue)
@@ -355,7 +355,7 @@ func drawUI(hdc uintptr, width, height int) {
 
 	// Toast
 	if st.toast != "" && nowMillis() < st.toastUntil {
-		drawText(hdc, st.toast, sc(24), sc(556), width-sc(48), sc(18), fontMicro, colorBlue, DT_CENTER|DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX)
+		drawText(hdc, st.toast, sc(24), sc(596), width-sc(48), sc(18), fontMicro, colorBlue, DT_CENTER|DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX)
 	}
 }
 
@@ -389,6 +389,7 @@ func handleClick(id string) {
 		if st.running {
 			stopRun()
 		} else {
+			confirmLidRestore()
 			removeTrayIcon()
 			pDestroyWindow.Call(hwndMain)
 		}
@@ -499,6 +500,7 @@ func handleTrayCommand(id int) {
 		setAutostart(st.autostart)
 		repaint()
 	case 1005:
+		confirmLidRestore()
 		removeTrayIcon()
 		pDestroyWindow.Call(hwndMain)
 	}
